@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Churn Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>
+        </svg>
+      </span>
+      <span class="brand-name">Churn Finder</span>
+    </div>
+    <span id="apiStatus" class="status" role="status">Checking server…</span>
+  </header>
+
+  <main class="layout">
+    <section class="panel form-panel">
+      <div class="panel-head">
+        <h1>Will this customer leave?</h1>
+        <p>Fill in the customer's details and the model estimates how likely they are to cancel.</p>
+        <div class="presets">
+          <span>Quick fill:</span>
+          <button type="button" class="chip" data-preset="risky">Likely to churn</button>
+          <button type="button" class="chip" data-preset="loyal">Likely to stay</button>
+          <button type="button" class="chip ghost" data-preset="clear">Clear</button>
+        </div>
+      </div>
+
+      <form id="churnForm" autocomplete="off" novalidate>
+        <fieldset>
+          <legend><span class="step">1</span> Customer</legend>
+          <div class="grid">
+            <label class="field">Gender
+              <select name="gender">
+                <option>Female</option><option>Male</option>
+              </select>
+            </label>
+            <label class="field">Senior citizen
+              <select name="SeniorCitizen">
+                <option value="0">No</option><option value="1">Yes</option>
+              </select>
+            </label>
+            <label class="field">Has a partner
+              <select name="Partner"><option>No</option><option>Yes</option></select>
+            </label>
+            <label class="field">Has dependents
+              <select name="Dependents"><option>No</option><option>Yes</option></select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="step">2</span> Services</legend>
+          <div class="grid">
+            <label class="field">Phone service
+              <select name="PhoneService"><option>Yes</option><option>No</option></select>
+            </label>
+            <label class="field">Multiple lines
+              <select name="MultipleLines">
+                <option>No</option><option>Yes</option><option>No phone service</option>
+              </select>
+            </label>
+            <label class="field">Internet service
+              <select name="InternetService">
+                <option>Fiber optic</option><option>DSL</option><option>No</option>
+              </select>
+            </label>
+            <label class="field">Online security
+              <select name="OnlineSecurity">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+            <label class="field">Online backup
+              <select name="OnlineBackup">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+            <label class="field">Device protection
+              <select name="DeviceProtection">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+            <label class="field">Tech support
+              <select name="TechSupport">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+            <label class="field">Streaming TV
+              <select name="StreamingTV">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+            <label class="field">Streaming movies
+              <select name="StreamingMovies">
+                <option>No</option><option>Yes</option><option>No internet service</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="step">3</span> Contract &amp; billing</legend>
+          <div class="grid">
+            <label class="field">Contract
+              <select name="Contract">
+                <option>Month-to-month</option><option>One year</option><option>Two year</option>
+              </select>
+            </label>
+            <label class="field">Paperless billing
+              <select name="PaperlessBilling"><option>Yes</option><option>No</option></select>
+            </label>
+            <label class="field wide">Payment method
+              <select name="PaymentMethod">
+                <option>Electronic check</option>
+                <option>Mailed check</option>
+                <option>Bank transfer (automatic)</option>
+                <option>Credit card (automatic)</option>
+              </select>
+            </label>
+            <label class="field">Tenure (months)
+              <input type="number" name="tenure" min="0" max="100" step="1" value="2" required>
+              <small class="err" data-for="tenure"></small>
+            </label>
+            <label class="field">Monthly charges
+              <input type="number" name="MonthlyCharges" min="0" max="500" step="0.01" value="75" required>
+              <small class="err" data-for="MonthlyCharges"></small>
+            </label>
+            <label class="field">Total charges
+              <input type="number" name="TotalCharges" min="0" step="0.01" value="150" required>
+              <small class="err" data-for="TotalCharges"></small>
+            </label>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="autoTotal" checked>
+            Calculate total charges automatically (tenure × monthly)
+          </label>
+        </fieldset>
+
+        <button type="submit" id="predictBtn" class="btn">
+          <span class="btn-text">Predict churn</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+    </section>
+
+    <aside class="panel result-panel" aria-live="polite">
+      <div id="resultCard" class="result idle">
+        <div class="ring" id="ring" style="--pct:0">
+          <div class="ring-inner">
+            <span id="pctText" class="pct">–</span>
+            <span id="pctLabel" class="pct-label">will churn?</span>
+          </div>
+        </div>
+        <h2 id="verdict">No prediction yet</h2>
+        <p id="verdictText" class="verdict-text">Submit the form to see the result here.</p>
+      </div>
+
+      <div id="tipsBox" class="tips" hidden>
+        <h3>Suggested retention actions</h3>
+        <ul id="tipsList"></ul>
+      </div>
+
+      <p class="disclaimer">Predictions come from a machine learning model and are estimates, not guarantees.</p>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
